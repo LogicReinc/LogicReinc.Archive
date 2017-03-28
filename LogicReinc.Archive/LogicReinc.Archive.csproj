@@ -75,7 +75,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archive.cs" />
+    <Compile Include="ArchiveSettings.cs" />
+    <Compile Include="Components\Encryption.cs" />
     <Compile Include="Components\FileTypes.cs" />
+    <Compile Include="Components\Hashing.cs" />
     <Compile Include="Components\Namespaces.cs" />
     <Compile Include="Document.cs" />
     <Compile Include="DocumentTypes\DocTypeExtractor.cs" />
