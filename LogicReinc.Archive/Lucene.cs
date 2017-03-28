@@ -16,34 +16,16 @@ namespace LogicReinc.Archive
 {
     public class LuceneService : IDisposable
     {
-        private string Password { get; set; }
         private Analyzer Analyzer { get; set; }
 
         public IndexWriter Writer { get; private set; }
         public LDirectory IndexDirectory { get; private set; }
         public string Path { get; private set; }
-        
 
-        public LuceneService(string directory, string localisation ="", string password = null)
+        public LuceneService(string directory, string localisation = "")
         {
             Path = directory;
-            Password = password;
             Initialize(localisation);
-        }
-
-
-
-        public void Dispose()
-        {
-            Writer.Commit();
-            Writer.Dispose();
-            Analyzer.Dispose();
-            IndexDirectory.Dispose();
-        }
-
-        public void Close()
-        {
-            Dispose();
         }
 
         public void Initialize(string localisation)
@@ -62,10 +44,9 @@ namespace LogicReinc.Archive
             }
         }
 
-
-        public void AddIndex(LRDocument document)
+        public void AddIndex(Document document)
         {
-            Writer.AddDocument(document.CreateIndexDocument());
+            Writer.AddDocument(document);
             Writer.Commit();
         }
 
@@ -102,7 +83,6 @@ namespace LogicReinc.Archive
                 return docs.ScoreDocs.Select(x => new LRDocumentResult(x.Score, reader.Document(x.Doc))).ToList();
             }
         }
-
         public List<LRDocumentResult> Find(string[] fields, params string[] keywords)
         {
             using (IndexReader reader = Writer.GetReader())
@@ -116,6 +96,24 @@ namespace LogicReinc.Archive
                 TopDocs docs = searcher.Search(query, reader.MaxDoc);
                 return docs.ScoreDocs.Select(x => new LRDocumentResult(x.Score, reader.Document(x.Doc))).ToList();
             }
+        }
+
+        public void Optimize()
+        {
+            Writer.Optimize();
+        }
+        
+        public void Close()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            Writer.Commit();
+            Writer.Dispose();
+            Analyzer.Dispose();
+            IndexDirectory.Dispose();
         }
     }
 }

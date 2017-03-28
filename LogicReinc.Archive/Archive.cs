@@ -14,8 +14,7 @@ namespace LogicReinc.Archive
 {
     public class Archive
     {
-        public string Directory { get; private set; }
-        private string Password { get; set; }
+        public ArchiveSettings Settings { get; private set; }
         
         public DirectoryInfo RootDirectory { get; private set; }
         public DirectoryInfo IndexDirectory { get; private set; }
@@ -25,27 +24,38 @@ namespace LogicReinc.Archive
 
         internal Dictionary<string, IDocTypeExtractor> FileExtractors { get; } = new Dictionary<string, IDocTypeExtractor>();
 
-        public Archive(string directory, string password = "")
+        public Archive(ArchiveSettings settings)
         {
-            if (string.IsNullOrEmpty(directory))
-                directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            Initialize(settings);
+        }
+        public Archive(string directory)
+        {
+            Initialize(new ArchiveSettings()
+            {
+                Directory = directory
+            });
+        }
 
-            Directory = directory;
-            Password = password;
-
-            RootDirectory = new DirectoryInfo(directory);
+        private void Initialize(ArchiveSettings settings)
+        {
+            Settings = settings;
+            
+            if (string.IsNullOrEmpty(Settings.Directory))
+                Settings.Directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            
+            RootDirectory = new DirectoryInfo(Settings.Directory);
             if (!RootDirectory.Exists)
                 RootDirectory.Create();
 
-            IndexDirectory = new DirectoryInfo(Path.Combine(directory, "Indexes"));
+            IndexDirectory = new DirectoryInfo(Path.Combine(Settings.Directory, "Indexes"));
             if (!IndexDirectory.Exists)
                 IndexDirectory.Create();
 
-            DocumentDirectory = new DirectoryInfo(Path.Combine(directory, "Documents"));
+            DocumentDirectory = new DirectoryInfo(Path.Combine(Settings.Directory, "Documents"));
             if (!DocumentDirectory.Exists)
                 DocumentDirectory.Create();
 
-            Lucene = new LuceneService(IndexDirectory.FullName, password);
+            Lucene = new LuceneService(IndexDirectory.FullName);
         }
 
         public void Close()
@@ -60,7 +70,9 @@ namespace LogicReinc.Archive
 
         public void Add(LRDocument document)
         {
-            Lucene.AddIndex(document);
+            if (Settings.HashTags)
+                document.Tags = Hashing.HashTags(document.Tags.ToArray()).ToList();
+            Lucene.AddIndex(document.CreateIndexDocument());
         }
 
         public LRDocument ProcessFromPath(string name, string path)
@@ -96,19 +108,18 @@ namespace LogicReinc.Archive
         
         public List<LRDocumentResult> Search(params string[] queries)
         {
-            return Lucene.Find(LRDocument.Fields, queries).OrderByDescending(x => x.Score).ToList();
+            return Lucene.Find(LRDocument.SearchFields, queries).OrderByDescending(x => x.Score).ToList();
         }
         public List<LRDocumentResult> Search(string text)
         {
-            return Lucene.Find(LRDocument.Fields, text).OrderByDescending(x => x.Score).ToList();
+            return Lucene.Find(LRDocument.SearchFields, text).OrderByDescending(x => x.Score).ToList();
         }
         public List<LRDocumentResult> SearchTags(params string[] tags)
         {
             return Lucene.Find(new string[] { "Tags" }, tags).OrderByDescending(x => x.Score).ToList();
         }
-
-
-        public FileStream Read(string id)
+        
+        public Stream Read(string id)
         {
             return Get(id)?.Read(this) ?? null;
         }
