@@ -6,7 +6,7 @@ using System.Threading;
 namespace LogicReinc.Archive.Tests
 {
     [TestClass]
-    public class ArchiveTests
+    public class SearchTests
     {
 
         public static Archive archive = new Archive("");
