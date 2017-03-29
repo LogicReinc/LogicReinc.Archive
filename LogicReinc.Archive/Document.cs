@@ -86,10 +86,12 @@ namespace LogicReinc.Archive
         public static LRDocument Archive(Archive archive, string name, string summary, string mime, Stream stream, params string[] tags)
             => Archive(archive, name, summary, mime, null, stream, tags);
         public static LRDocument Archive(Archive archive, string name, string summary, string mime, string textOverride, Stream stream, params string[] tags)
+            => Archive(archive, null, name, summary, mime, textOverride, stream, tags);
+        public static LRDocument Archive(Archive archive, string id, string name, string summary, string mime, string textOverride, Stream stream, params string[] tags)
         {
-        
+
             LRDocument doc = new LRDocument();
-            doc.ID = Guid.NewGuid().ToString();
+            doc.ID = (id != null) ? id : Guid.NewGuid().ToString();
             doc.Name = name;
             doc.Summary = summary;
             doc.Tags = tags.ToList();
@@ -98,7 +100,7 @@ namespace LogicReinc.Archive
                 doc.Text = textOverride;
 
             if (string.IsNullOrEmpty(archive.Settings.FileEncryptionPassword))
-                using (FileStream str = new FileStream(Path.Combine(archive.DocumentDirectory.FullName, doc.ID), FileMode.CreateNew))
+                using (FileStream str = new FileStream(archive.BuildFilePath(doc.ID), FileMode.Create))
                 {
                     byte[] buffer = new byte[4096];
                     int read = 0;
@@ -106,7 +108,7 @@ namespace LogicReinc.Archive
                         str.Write(buffer, 0, read);
                 }
             else
-                using (FileStream str = new FileStream(Path.Combine(archive.DocumentDirectory.FullName, doc.ID), FileMode.CreateNew))
+                using (FileStream str = new FileStream(archive.BuildFilePath(doc.ID), FileMode.Create))
                     Encryption.EncryptStream(stream, str, archive.Settings.FileEncryptionPassword);
 
             if (string.IsNullOrEmpty(textOverride))

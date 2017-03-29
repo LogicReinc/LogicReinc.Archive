@@ -36,6 +36,7 @@ namespace LogicReinc.Archive
             });
         }
 
+
         private void Initialize(ArchiveSettings settings)
         {
             Settings = settings;
@@ -70,9 +71,25 @@ namespace LogicReinc.Archive
 
         public void Add(LRDocument document)
         {
+            if (string.IsNullOrEmpty(document.ID))
+                document.ID = Guid.NewGuid().ToString();
             if (Settings.HashTags)
                 document.Tags = Hashing.HashTags(document.Tags.ToArray()).ToList();
             Lucene.AddIndex(document.CreateIndexDocument());
+        }
+
+        public void Remove(string id, bool deleteFile)
+        {
+            string path = BuildFilePath(id);
+
+            Lucene.RemoveIndex(id);
+            if (deleteFile && File.Exists(path))
+                File.Delete(path);
+        }
+
+        public string BuildFilePath(string id)
+        {
+            return Path.Combine(DocumentDirectory.FullName, id);
         }
 
         public LRDocument ProcessFromPath(string name, string path)
@@ -116,7 +133,7 @@ namespace LogicReinc.Archive
         }
         public List<LRDocumentResult> SearchTags(params string[] tags)
         {
-            return Lucene.Find(new string[] { "Tags" }, tags).OrderByDescending(x => x.Score).ToList();
+            return Lucene.Find(new string[] { "Tags" }, (!Settings.HashTags) ? tags : Hashing.HashTags(tags)).OrderByDescending(x => x.Score).ToList();
         }
         
         public Stream Read(string id)
