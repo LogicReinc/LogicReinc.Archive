@@ -18,7 +18,8 @@ namespace LogicReinc.Archive
     {
         private Analyzer Analyzer { get; set; }
 
-        public IndexWriter Writer { get; private set; }
+        //public IndexWriter Writer { get; private set; }
+        public IndexWriter NewWriter => new IndexWriter(IndexDirectory, Analyzer, false, IndexWriter.MaxFieldLength.UNLIMITED);
         public LDirectory IndexDirectory { get; private set; }
         public string Path { get; private set; }
 
@@ -40,26 +41,33 @@ namespace LogicReinc.Archive
             if(Directory.Exists(Path))
             {
                 IndexDirectory = Lucene.Net.Store.FSDirectory.Open(Path);
-                Writer = new IndexWriter(IndexDirectory, Analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
+                //Writer = new IndexWriter(IndexDirectory, Analyzer, false, IndexWriter.MaxFieldLength.UNLIMITED);
             }
         }
 
         public void AddIndex(Document document)
         {
-            Writer.AddDocument(document);
-            Writer.Commit();
+            using (IndexWriter Writer = NewWriter)
+            {
+                Writer.AddDocument(document);
+                Writer.Commit();
+            }
         }
 
         public void RemoveIndex(string id)
         {
-            TermQuery query = new TermQuery(new Term("ID", id));
-            Writer.DeleteDocuments(query);
-            Writer.Commit();
+            using (IndexWriter Writer = NewWriter)
+            {
+                TermQuery query = new TermQuery(new Term("ID", id));
+                Writer.DeleteDocuments(query);
+                Writer.Commit();
+            }
         }
 
         public Document GetDocument(string id)
         {
             TermQuery query = new TermQuery(new Term("ID", id));
+            using (IndexWriter Writer = NewWriter)
             using (IndexReader reader = Writer.GetReader())
             using (IndexSearcher searcher = new IndexSearcher(reader))
             {
@@ -73,6 +81,7 @@ namespace LogicReinc.Archive
 
         public List<LRDocumentResult> Find(string[] fields, string text)
         {
+            using (IndexWriter Writer = NewWriter)
             using (IndexReader reader = Writer.GetReader())
             using (IndexSearcher searcher = new IndexSearcher(reader))
             {
@@ -85,6 +94,7 @@ namespace LogicReinc.Archive
         }
         public List<LRDocumentResult> Find(string[] fields, params string[] keywords)
         {
+            using (IndexWriter Writer = NewWriter)
             using (IndexReader reader = Writer.GetReader())
             using (IndexSearcher searcher = new IndexSearcher(reader))
             {
@@ -100,7 +110,10 @@ namespace LogicReinc.Archive
 
         public void Optimize()
         {
-            Writer.Optimize();
+            using (IndexWriter Writer = NewWriter)
+            {
+                Writer.Optimize();
+            }
         }
         
         public void Close()
@@ -110,8 +123,8 @@ namespace LogicReinc.Archive
 
         public void Dispose()
         {
-            Writer.Commit();
-            Writer.Dispose();
+            //Writer.Commit();
+            //Writer.Dispose();
             Analyzer.Dispose();
             IndexDirectory.Dispose();
         }
