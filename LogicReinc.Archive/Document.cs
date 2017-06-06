@@ -33,7 +33,7 @@ namespace LogicReinc.Archive
         public string Name { get; set; }
         public string FilePath { get; set; }
         public string Summary { get; set; }
-        public List<string> Tags { get; set; }
+        public List<string> Tags { get; set; } = new List<string>();
 
         public string Text { get; set; }
 
@@ -55,7 +55,7 @@ namespace LogicReinc.Archive
                 return new FileStream(Path.Combine(archive.DocumentDirectory.FullName, ID), FileMode.Open);
             else
                 return Encryption.CreateDecryptStream(
-                    new FileStream(Path.Combine(archive.DocumentDirectory.FullName, ID), FileMode.Open), archive.Settings.FileEncryptionPassword, "Archive");
+                    new FileStream(Path.Combine(archive.DocumentDirectory.FullName, ID), FileMode.Open), archive.Settings.FileEncryptionPassword, Encryption.Salt);
         }
 
         public Document CreateIndexDocument()

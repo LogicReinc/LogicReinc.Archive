@@ -140,5 +140,10 @@ namespace LogicReinc.Archive
         {
             return Get(id)?.Read(this) ?? null;
         }
+
+        public void SetGlobalSalt(string salt)
+        {
+            Encryption.Salt = salt;
+        }
     }
 }

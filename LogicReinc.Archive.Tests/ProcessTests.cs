@@ -18,7 +18,11 @@ namespace LogicReinc.Archive.Tests
 
         const string TestText = @"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
-        static Archive archive = new Archive("ProcessTest");
+        static Archive archive = new Archive(new ArchiveSettings()
+        {
+            Directory = "ProcessTest",
+            FileEncryptionPassword = "Testin"
+        });
     
         [ClassCleanup]
         public static void Cleanup()
@@ -49,6 +53,15 @@ namespace LogicReinc.Archive.Tests
             LRDocument doc = archive.ProcessFromPath("TestText", TestDocText);
 
             Assert.AreEqual(TestText.Trim(), doc.Text.Trim());
+
+
+
+
+            using (Stream str = doc.Read(archive))
+            using (StreamReader reader = new StreamReader(str))
+            {
+                Assert.IsTrue(!string.IsNullOrEmpty(reader.ReadToEnd()));
+            }
         }
 
         [TestMethod]
