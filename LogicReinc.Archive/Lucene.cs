@@ -19,7 +19,20 @@ namespace LogicReinc.Archive
         private Analyzer Analyzer { get; set; }
 
         //public IndexWriter Writer { get; private set; }
-        public IndexWriter NewWriter => new IndexWriter(IndexDirectory, Analyzer, false, IndexWriter.MaxFieldLength.UNLIMITED);
+        public IndexWriter NewWriter
+        {
+            get
+            {
+                if (HasInited())
+                    return new IndexWriter(IndexDirectory, Analyzer, false, IndexWriter.MaxFieldLength.UNLIMITED);
+                File.Create(System.IO.Path.Combine(Path, "inited"));
+                return new IndexWriter(IndexDirectory, Analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
+            }
+        }
+        private bool HasInited()
+        {
+            return File.Exists(System.IO.Path.Combine(Path, "inited"));
+        }
         public LDirectory IndexDirectory { get; private set; }
         public string Path { get; private set; }
 
