@@ -92,6 +92,19 @@ namespace LogicReinc.Archive
             }
         }
 
+        public List<LRDocumentResult> Query(string query)
+        {
+            using (IndexWriter Writer = NewWriter)
+            using (IndexReader reader = Writer.GetReader())
+            using (IndexSearcher searcher = new IndexSearcher(reader))
+            {
+                QueryParser parser = new QueryParser(Lucene.Net.Util.Version.LUCENE_30, "Text", Analyzer);
+                Query q = parser.Parse(query);
+                TopDocs docs = searcher.Search(q, (reader.MaxDoc > 0) ? reader.MaxDoc : 1);
+                return docs.ScoreDocs.Select(x => new LRDocumentResult(x.Score, reader.Document(x.Doc))).ToList();
+            }
+        }
+
         public List<LRDocumentResult> Find(string[] fields, string text)
         {
             using (IndexWriter Writer = NewWriter)

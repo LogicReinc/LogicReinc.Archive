@@ -123,6 +123,11 @@ namespace LogicReinc.Archive
             return null;
         }
         
+        public List<LRDocumentResult> SearchQuery(string query)
+        {
+            return Lucene.Query(query);
+        }
+
         public List<LRDocumentResult> Search(params string[] queries)
         {
             return Lucene.Find(LRDocument.SearchFields, queries).OrderByDescending(x => x.Score).ToList();
