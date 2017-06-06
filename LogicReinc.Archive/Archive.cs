@@ -141,6 +141,12 @@ namespace LogicReinc.Archive
             return Get(id)?.Read(this) ?? null;
         }
 
+
+        public int GetDocumentCount()
+        {
+            return Lucene.GetDocumentCount();
+        }
+
         public void SetGlobalSalt(string salt)
         {
             Encryption.Salt = salt;

@@ -108,6 +108,13 @@ namespace LogicReinc.Archive
             }
         }
 
+        public int GetDocumentCount()
+        {
+            using (IndexWriter writer = NewWriter)
+                return writer.NumDocs();
+        }
+
+
         public void Optimize()
         {
             using (IndexWriter Writer = NewWriter)
