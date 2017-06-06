@@ -120,6 +120,15 @@ The event consists of several tracks of speakers about computer- and hacking-rel
 
 
         [TestMethod]
+        public void SearchQuery()
+        {
+            List<LRDocumentResult> result = archive.SearchQuery("computer OR rhino");
+            Assert.AreEqual(2, result.Count);
+            result = archive.SearchQuery("computer AND rhinos");
+            Assert.AreEqual(0, result.Count);
+        }
+
+        [TestMethod]
         public void SearchGroup()
         {
 
