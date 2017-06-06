@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Threading;
+using System.IO;
 
 namespace LogicReinc.Archive.Tests
 {
@@ -9,7 +10,11 @@ namespace LogicReinc.Archive.Tests
     public class SearchTests
     {
 
-        public static Archive archive = new Archive("");
+        public static Archive archive = new Archive(new ArchiveSettings()
+        {
+            Directory = "",
+            FileEncryptionPassword = "test"
+        });
 
         [ClassInitialize]
         public static void Init(TestContext context)
@@ -100,6 +105,19 @@ The event consists of several tracks of speakers about computer- and hacking-rel
 
             Assert.AreEqual(1, result.Count);
         }
+
+        [TestMethod]
+        public void SearchTextNotFound()
+        {
+
+            List<LRDocumentResult> result = archive.Search("asdfasdfasdfdsa");
+
+            foreach (LRDocumentResult r in result)
+                Console.WriteLine($"Found: {r.Name} with score {r.Score}");
+
+            Assert.AreEqual(0, result.Count);
+        }
+
 
         [TestMethod]
         public void SearchGroup()

@@ -10,6 +10,20 @@ namespace LogicReinc.Archive.Components
 {
     public class Encryption
     {
+        private static string _salt = "ArchiveSalt";
+        public static string Salt
+        {
+            internal get
+            {
+                return _salt;
+            }
+            set
+            {
+                _salt = value.PadLeft(8, 'x');
+            }
+        }
+
+
         private static Rfc2898DeriveBytes DerivePassword(string pass, string salt = "")
         {
             byte[] saltBytes = Encoding.ASCII.GetBytes(salt);
@@ -19,14 +33,7 @@ namespace LogicReinc.Archive.Components
 
         public static bool EncryptStream(Stream str, Stream eStr, string password)
         {
-            RijndaelManaged algo = new RijndaelManaged();
-            algo.Padding = PaddingMode.PKCS7;
-            Rfc2898DeriveBytes key = DerivePassword(password);
-            algo.Key = key.GetBytes(algo.KeySize / 8);
-            algo.IV = key.GetBytes(algo.BlockSize / 8);
-            ICryptoTransform encryptor = algo.CreateEncryptor();
-
-            using (CryptoStream crypto = CreateEncryptStream(eStr, password, "Archive"))
+            using (CryptoStream crypto = CreateEncryptStream(eStr, password, _salt))
             {
                 byte[] buffer = new byte[4096];
                 int read;
@@ -44,7 +51,7 @@ namespace LogicReinc.Archive.Components
         }
         public static bool DecryptStream(Stream str, Stream eStr, string password)
         {
-            using (CryptoStream crypto = CreateDecryptStream(eStr, password, "Archive"))
+            using (CryptoStream crypto = CreateDecryptStream(eStr, password, _salt))
             {
                 byte[] buffer = new byte[4096];
                 int read;

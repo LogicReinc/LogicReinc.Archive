@@ -63,7 +63,7 @@ namespace LogicReinc.Archive
             using (IndexReader reader = Writer.GetReader())
             using (IndexSearcher searcher = new IndexSearcher(reader))
             {
-                TopDocs docs = searcher.Search(query, reader.MaxDoc);
+                TopDocs docs = searcher.Search(query, (reader.MaxDoc > 0) ? reader.MaxDoc : 1);
                 int? did = docs.ScoreDocs.FirstOrDefault()?.Doc;
                 if (did != null)
                     return reader.Document(did.Value);
@@ -79,7 +79,7 @@ namespace LogicReinc.Archive
                 MultiFieldQueryParser parser = new MultiFieldQueryParser(Lucene.Net.Util.Version.LUCENE_30, fields, Analyzer);
 
                 Query query = parser.Parse(text);
-                TopDocs docs = searcher.Search(query, reader.MaxDoc);
+                TopDocs docs = searcher.Search(query, (reader.MaxDoc > 0) ? reader.MaxDoc : 1);
                 return docs.ScoreDocs.Select(x => new LRDocumentResult(x.Score, reader.Document(x.Doc))).ToList();
             }
         }
@@ -93,7 +93,7 @@ namespace LogicReinc.Archive
                 foreach (string keyword in keywords)
                     query.Add(parser.Parse(keyword), Occur.SHOULD);
 
-                TopDocs docs = searcher.Search(query, reader.MaxDoc);
+                TopDocs docs = searcher.Search(query, (reader.MaxDoc > 0) ? reader.MaxDoc : 1);
                 return docs.ScoreDocs.Select(x => new LRDocumentResult(x.Score, reader.Document(x.Doc))).ToList();
             }
         }
