@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using LDirectory = Lucene.Net.Store.Directory;
 
@@ -24,9 +25,31 @@ namespace LogicReinc.Archive
             get
             {
                 if (HasInited())
-                    return new IndexWriter(IndexDirectory, Analyzer, false, IndexWriter.MaxFieldLength.UNLIMITED);
+                {
+                    for (int i = 0; i <= 10; i++)
+                    {
+                        try
+                        {
+                            return new IndexWriter(IndexDirectory, Analyzer, false, IndexWriter.MaxFieldLength.UNLIMITED)
+                            {
+                                WriteLockTimeout = 10000
+                            };
+                        }
+                        catch(Exception ex)
+                        {
+                            if (ex.HResult != -2146232800 || i == 10)
+                                throw;
+                            else
+                                Thread.Sleep(500);
+                        }
+                    }
+
+                }
                 File.Create(System.IO.Path.Combine(Path, "inited"));
-                return new IndexWriter(IndexDirectory, Analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
+                return new IndexWriter(IndexDirectory, Analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED)
+                {
+                    WriteLockTimeout = 10000
+                };
             }
         }
         private bool HasInited()
@@ -63,6 +86,16 @@ namespace LogicReinc.Archive
             using (IndexWriter Writer = NewWriter)
             {
                 Writer.AddDocument(document);
+                Writer.Commit();
+            }
+        }
+
+        public void AddIndexes(List<Document> documents)
+        {
+            using (IndexWriter Writer = NewWriter)
+            {
+                foreach(Document document in documents)
+                    Writer.AddDocument(document);
                 Writer.Commit();
             }
         }

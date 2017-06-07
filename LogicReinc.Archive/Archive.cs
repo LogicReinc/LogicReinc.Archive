@@ -78,6 +78,18 @@ namespace LogicReinc.Archive
             Lucene.AddIndex(document.CreateIndexDocument());
         }
 
+        public void Add(List<LRDocument> documents)
+        {
+            foreach(LRDocument document in documents)
+            {
+                if (string.IsNullOrEmpty(document.ID))
+                    document.ID = Guid.NewGuid().ToString();
+                if (Settings.HashTags)
+                    document.Tags = Hashing.HashTags(document.Tags.ToArray()).ToList();
+            }
+            Lucene.AddIndexes(documents.Select(x => x.CreateIndexDocument()).ToList());
+        }
+
         public void Remove(string id, bool deleteFile)
         {
             string path = BuildFilePath(id);
